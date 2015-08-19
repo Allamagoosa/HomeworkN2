@@ -2,22 +2,24 @@
 # -*- coding: utf-8 -*-
 """ This module collect docstrings from root folder """
 import sys
-import importlib
 import os
 from jinja2 import Template
 import imp
 
-command = '0'
-if len(sys.argv) > 1: command = sys.argv[1]
+PATH = '0'
+if len(sys.argv) > 1:
+    PATH = sys.argv[1]
 
 class Harvester(object):
     """ Common base class for collect docstrings """
-    def __init__(self, dir = "/home/pm/work/x/"):
-        self.dir_path = dir
-        if command != '0': self.dir_path = command
-        print ("dir_path=" + self.dir_path)
-       
+    def __init__(self, d="/home/pm/work/x/"):
+        if PATH != '0':
+            self.dir_path = PATH
+        else: self.dir_path = d
+        print 'seaching directory: {0}'.format(self.dir_path)
+
     def list_files(self):
+        """ Collect files, return List """
         list_of_files = os.listdir(self.dir_path)
         return list_of_files
 
@@ -31,37 +33,36 @@ class Harvester(object):
 {{ item }}
 </body>
 </html>''')
-        # ----------------------------------------                                                                             
+        # --------------------------------
         for file_item in self.list_files():
             fullname = os.path.splitext(file_item)
             filename = fullname[0]
-            if fullname[1] ==".py":                
+            if fullname[1] == ".py":
                 string_write = self.trim(filename)
                 file_write = filename
                 # jinja
-                string_write = tmpl.render(variable= str(filename), item=string_write)
+                string_write = tmpl.render(variable=str(filename), item=string_write)
                 self.write(file_write+".html", string_write)
-                 
-                 
-    def write(self, fw, sw):
+
+    def write(self, file_write, string_write):
         """ Write to script working directory """
-        self.file_w = fw
-        self.string_w = sw
-        f = open(self.file_w, "w")
+        self.file_w = file_write
+        self.string_w = string_write
+        fopen = open(self.file_w, "w")
         # Working print for user
-        print ("file to write: "+os.getcwd()+'/'+f.name)
-        f.write(self.string_w);
-        f.close()
-        
+        print "file to write: "+os.getcwd()+'/'+fopen.name
+        fopen.write(self.string_w)
+        fopen.close()
+
     def trim(self, tfile):
-        """ Take docstring from file and format to more clear view. Result is a string """ 
-        
-        # import from chosen directory, see Harvester.__init__(dir_path)
+        """ Take docstring from file and format to more clear view. Result is a string """
+
+        # import from chosen directory dir_path
         # ***todo may be need seperataly function
         module = imp.load_source(tfile, self.dir_path+tfile+".py")
         docstring = module.__doc__
-        
-        # Using code from example :) https://www.python.org/dev/peps/pep-0257/ 
+
+        # Using code from example :) https://www.python.org/dev/peps/pep-0257/
         if not docstring:
             return ''
         # Convert tabs to spaces (following the normal Python rules)
@@ -87,3 +88,4 @@ class Harvester(object):
         return '\n'.join(trimmed)
 
 #h1 = Harvester()
+#h1.harvest()
